@@ -15,12 +15,25 @@ This script helps collect attributes of posts in "sina weibo". Users can record 
 
 Scripts currently available:
 
-| Name        | Description                                                  |
-| ----------- | ------------------------------------------------------------ |
-| `search.py` | Search for a word and specific time interval and record all posts, the search result.<br />Parameters: (Edit these parameters at the head of the script.)<br />    `search_string`: The string to search for. All posts containing this string will be recorded, 50 pages at most.<br />    `start_time`: Only posts which are posted after this time will be recorded. (Accurate to hour level)<br />    `end_time`: Only posts which are posted before this time will be recorded. (Accurate to hour level)<br />    `rest_time`: The interval between two requests, where the unit is second.<br />Results are saved as Python pickle format at `results/weibo-{search_string}-{start_time}-{end_time}.pkl`. The `start_time` and `end_time` in filename are formatted as Unix timestamp (the unit is second). |
-|             |                                                              |
+### 1.  search
 
+**Description:**
 
+Search for a word and specific time interval and record all posts, the search result.
+
+**Parameters:**
+
+| Name            | Description                                                                                                                                                                 |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `search_string` | The string to search for. All posts containing this string will be recorded, 50 pages at most.                                                                              |
+| `start_time`    | Only posts which are posted after this time will be recorded. (Accurate to hour level)                                                                                      |
+| `end_time`      | Only posts which are posted before this time will be recorded. (Accurate to hour level)                                                                                     |
+| `rest_time`     | The interval between two requests, where the unit is second.<br />Results are saved as Python pickle format at `results/weibo-{search_string}-{start_time}-{end_time}.pkl`. |
+|                 |                                                                                                                                                                             |
+
+**Notes:**
+
+The `start_time` and `end_time` in filename are formatted as Unix timestamp (the unit is second). 
 
 ## Installation
 
