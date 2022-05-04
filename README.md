@@ -1,4 +1,4 @@
-# Web Crawler for "sina weibo"
+# "weibo.com" Web Crawler
 
  A web crawler for recording posts in "sina weibo"
 
