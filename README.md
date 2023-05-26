@@ -17,7 +17,7 @@
 2. Login https://weibo.com/ in Google Chrome, and don't close it. <br>
    *We assume Google Chrome is installed in default path. Otherwise, please modify Line 34 and 37 and assign these two variables to your customized cookies and encryption key respectively.*
 
-3. Run `login_windows.py`. By default, it creates a database at `posts.db`. *The file path can be customized with `db` argument. [Detail](#login_windows)*
+3. Run `login_windows.py`. By default, it creates a database at `posts.db`. *The file path can be customized with `db` argument. [Detail](docs/login_windows.md)*
 
 4. Close the browser.
 
