@@ -83,7 +83,7 @@ def get_posts(web_text, header, db, table, rest_time=(2, 5)):
                 if response.status_code == 200:
                     attributes['content'] = response.json().get('data').get('longTextContent')
         except AttributeError:
-            print()
+            pass
         if 'content' not in attributes.keys():
             try:
                 attributes['content'] = post.find('p', {'class': 'txt', 'node-type': 'feed_list_content'}).text.strip()
