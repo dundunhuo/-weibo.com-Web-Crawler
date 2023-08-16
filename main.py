@@ -11,8 +11,6 @@ parser.add_argument('--db', type=str, default='./posts.db',
 parser.add_argument('--chrome_user_data', type=str,
                     help='The \'User Data\' file under the installation path of Google Chrome. If blank, assume'
                          'Google Chrome\'s installed at default directory.')
-parser.add_argument('--search', action='store_true',
-                    help='Search posts with a word and a specific time period.')
 parser.add_argument('--query', type=str,
                     help='Search query submitted to https://weibo.com All posts containing this string will be '
                          'recorded, 50 pages at most.')
@@ -26,13 +24,10 @@ parser.add_argument('--end_time', type=str,
 parser.add_argument('--max_page', type=int,
                     help='The maximum page to collect. If existed pages are less than this number, the result will be '
                          'fewer.')
-parser.add_argument('--cookies', type=str,
-                    help='Cookies to log in https://weibo.com site.')
 command, _ = parser.parse_known_args()
 
-# if command.login:
-#     weibo_client = WeiboClient(chrome_user_data=command.chrome_user_data, db=command.db)
-#     weibo_client.login()
-# elif command.search:
+if command.login:
+    weibo_client = WeiboClient(chrome_user_data=command.chrome_user_data, db=command.db)
+    weibo_client.login()
 search(db=command.db, query=command.query, start_time=command.start_time, end_time=command.end_time,
-       max_page=command.max_page, cookies=command.cookies)
+       max_page=command.max_page)

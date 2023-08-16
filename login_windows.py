@@ -9,7 +9,6 @@ from Crypto.Cipher import AES
 import ctypes
 import ctypes.wintypes
 import json
-import shutil
 
 
 def dpapi_decrypt(encrypted):
@@ -64,10 +63,8 @@ class WeiboClient:
         return plaintext.decode('ascii')
 
     def login(self):
-        try:
-            c = sqlite3.connect(self.cookie_file, uri=True)
-        except sqlite3.OperationalError:
-            raise Exception('Unable to open Google Chrome\'s database. Please close Google Chrome and retry.')
+        # https://github.com/borisbabic/browser_cookie3/issues/180
+        c = sqlite3.connect(self.cookie_file)
         cookies = pd.read_sql(sql="SELECT * FROM cookies WHERE host_key LIKE '%weibo.com%'", con=c)
         c.close()
         cookies_weibo_cleaned = pd.DataFrame({
@@ -78,3 +75,8 @@ class WeiboClient:
         c = sqlite3.connect(self.db)
         cookies_weibo_cleaned.to_sql('cookies', c, index=False, if_exists='replace')
         c.close()
+
+
+if __name__ == '__main__':
+    weibo_client = WeiboClient(chrome_user_data=None, db='posts.db')
+    weibo_client.login()

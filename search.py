@@ -123,19 +123,17 @@ def get_posts(web_text, header, db, table, rest_time=(2, 5)):
     c.close()
 
 
-def search(db, query, start_time, end_time, max_page=None, cookies=None):
-    if cookies is None:
-        cookies = input('Please paste cookies in the next line.\n')
+def search(db, query, start_time, end_time, max_page=None):
     table = ''.join(random.choice(string.ascii_letters) for _ in range(16))
     meta = pd.DataFrame([{'query': query, 'start_time': start_time, 'end_time': end_time, 'table': table}])
 
     c = sqlite3.connect(db)
-    # cookies = pd.read_sql_query('select * from cookies', c)
+    cookies = pd.read_sql_query('select * from cookies', c)
     meta.to_sql(name='search', con=c, index=False, if_exists='append')
     c.close()
 
-    # cookies = dict(zip(cookies.name, cookies.value))
-    # cookies = '; '.join([f'{k}={v}' for k, v in cookies.items()])
+    cookies = dict(zip(cookies.name, cookies.value))
+    cookies = '; '.join([f'{k}={v}' for k, v in cookies.items()])
     chrome_113 = {
         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,"
                   "*/*;q=0.8,application/signed-exchange;v=b3;q=0.9", "accept-encoding": "gzip, deflate, br",
