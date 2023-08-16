@@ -9,6 +9,7 @@ from Crypto.Cipher import AES
 import ctypes
 import ctypes.wintypes
 import json
+import shutil
 
 
 def dpapi_decrypt(encrypted):
@@ -28,49 +29,52 @@ def dpapi_decrypt(encrypted):
     return result
 
 
-if 'USERNAME' not in os.environ:
-    raise Exception('Cannot obtain the current logged username in Microsoft Windows.')
-username = os.environ.get('USERNAME')
-cookie_file = rf'C:\Users\{username}\AppData\Local\Google\Chrome\User Data\Default\Network\Cookies'
-if not os.path.exists(cookie_file):
-    raise Exception('Google Chrome\'s cookie file does not exist.')
-encryption_key_file = rf'C:\Users\{username}\AppData\Local\Google\Chrome\User Data\Local State'
-if not os.path.exists(encryption_key_file):
-    raise Exception('Google Chrome\'s encryption key file does not exist.')
-
-with open(encryption_key_file, 'r') as f:
-    encrypt_key_config = json.load(f)
-encrypted_key = encrypt_key_config['os_crypt']['encrypted_key']
-encrypted_key = base64.b64decode(encrypted_key)
-encrypted_key = encrypted_key[5:]
-decrypted_key = dpapi_decrypt(encrypted_key)
-
-
-def cookies_decrypt(encrypted):
-    nonce, ciphertext, tag = encrypted[3:15], encrypted[15:-16], encrypted[-16:]
-    cipher = AES.new(decrypted_key, AES.MODE_GCM, nonce=nonce)
-    plaintext = cipher.decrypt_and_verify(ciphertext, tag)
-    return plaintext.decode('ascii')
-
-
 def chrome_utc_parser(chrome_utc):
     if chrome_utc:
         real_utc = int(chrome_utc / 1e6) - 11644473600
         return pd.to_datetime(real_utc, unit='s')
 
 
-def main(db):
-    connection = sqlite3.connect(cookie_file)
-    cookies = pd.read_sql_query('SELECT * FROM cookies', connection)
-    cookies_weibo_related = cookies[cookies.host_key.str.contains('weibo.com')]
-    cookies_weibo_cleaned = pd.DataFrame({
-        'name': cookies_weibo_related['name'],
-        'value': cookies_weibo_related['encrypted_value'].apply(cookies_decrypt),
-        'expired_utc': cookies_weibo_related['expires_utc'].apply(chrome_utc_parser),
-    })
-    connection_1 = sqlite3.connect(db)
-    cookies_weibo_cleaned.to_sql('cookies', connection_1, index=False, if_exists='replace')
+class WeiboClient:
+    def __init__(self, db, chrome_user_data=None):
+        if chrome_user_data is None:
+            username = os.environ.get('USERNAME')
+            if username is None:
+                raise Exception('[Error] Cannot obtain the current logged user\'s username in Microsoft Windows.')
+            chrome_user_data = rf'C:\Users\{username}\AppData\Local\Google\Chrome\User Data'
+        self.cookie_file = os.path.join(chrome_user_data, r'Default\Network\Cookies')
+        encryption_key_file = os.path.join(chrome_user_data, r'Local State')
+        if not os.path.exists(self.cookie_file):
+            raise Exception('[Error] Google Chrome\'s cookie file does not exist.')
+        if not os.path.exists(encryption_key_file):
+            raise Exception('[Error] Google Chrome\'s encryption key file does not exist.')
 
+        with open(encryption_key_file, 'r') as f:
+            encrypt_key_config = json.load(f)
+        encrypted_key = encrypt_key_config['os_crypt']['encrypted_key']
+        encrypted_key = base64.b64decode(encrypted_key)
+        encrypted_key = encrypted_key[5:]
+        self.decrypted_key = dpapi_decrypt(encrypted_key)
+        self.db = db
 
-if __name__ == '__main__':
-    main(db="posts.db")
+    def _cookies_decrypt(self, encrypted):
+        nonce, ciphertext, tag = encrypted[3:15], encrypted[15:-16], encrypted[-16:]
+        cipher = AES.new(self.decrypted_key, AES.MODE_GCM, nonce=nonce)
+        plaintext = cipher.decrypt_and_verify(ciphertext, tag)
+        return plaintext.decode('ascii')
+
+    def login(self):
+        try:
+            c = sqlite3.connect(self.cookie_file, uri=True)
+        except sqlite3.OperationalError:
+            raise Exception('Unable to open Google Chrome\'s database. Please close Google Chrome and retry.')
+        cookies = pd.read_sql(sql="SELECT * FROM cookies WHERE host_key LIKE '%weibo.com%'", con=c)
+        c.close()
+        cookies_weibo_cleaned = pd.DataFrame({
+            'name': cookies['name'],
+            'value': cookies['encrypted_value'].apply(self._cookies_decrypt),
+            'expired_utc': cookies['expires_utc'].apply(chrome_utc_parser),
+        })
+        c = sqlite3.connect(self.db)
+        cookies_weibo_cleaned.to_sql('cookies', c, index=False, if_exists='replace')
+        c.close()

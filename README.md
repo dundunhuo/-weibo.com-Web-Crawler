@@ -1,34 +1,51 @@
 # "weibo.com" Web Crawler
 
  The toolbox to collect posts from https://weibo.com
-
-![](https://shields.io/badge/OS-Windows_10_64--bit-lightgray)
-![](https://shields.io/badge/dependencies-Google_Chrome>=96-blue)
 ![](https://shields.io/badge/dependencies-Python_3.11-blue)
-![](https://shields.io/badge/tests-Google_Chrome_113_✔-brightgreen)
+
+## News
+
+[2023-08-17] New version of Google Chrome forbids to open cookies database while it is running, therefore we cannot retrieve cookies automatically in Windows. As a temporary workaround, please log into weibo.com and paste cookies manually.
 
 ## Usage
 
-1. Run the following script.
+1. Run the following command.
    ```bash
    pip install -r requirements.txt
    ```
 
-2. Login https://weibo.com/ in Google Chrome, and don't close it. <br>
-   *We assume Google Chrome is installed in default path. Otherwise, please modify Line 34 and 37 and assign these two variables to your customized cookies and encryption key respectively.*
+2. Login https://weibo.com/ in Google Chrome. Press F12 to open the developer's tool, refresh this web page and paste the cookies of the first request. (Used in step 4. This is a temporary workaround because of News 2023-08-17.)
 
-3. Run `login_windows.py`. By default, it creates a database at `posts.db`. *The file path can be customized with `db` argument. [Detail](docs/login_windows.md)*
+3. Activate Python environment, and use `cd` in Linux/macOS or `dir` in Windows, to set the program's root directory as current directory. 
 
-4. Close the browser.
+4. For example, you want to search posts containing 'Genshin Impact' on August 15, 2023 from 11:00-12:00, run the following command.
 
-5. The following functions work for you now.
+   ```
+   python main.py --query="Genshin Impact" --start_time=2023-08-15-11 --end_time=2023-08-15-12 --max_page=2 --cookies=*************************
+   ```
 
-## Functions
+   *To keep data privacy, cookies string is masked. This value is pasted from Google Chrome when you visited the website. See step 2.*
 
-[login_windows](docs/login_windows.md)
+5. The result is saved in `posts.db`  in the program's root directory. Open the `search` table to find the table name of your queries, then open the corresponding table to view results.
 
-Log in https://weibo.com and save logged-in status, with Windows platform.
+For more details, run the following command in step 4.
 
-[search](docs/search.md)
+```
+python main.py --help
+```
 
-Searches for a word and a specific time period.  It records all the searching result in SQLite database.
+The data structure of searching results are as follows.
+
+| Name        | Type | Description                                                  |
+| ----------- | ---- | ------------------------------------------------------------ |
+| avatar      | text | Link to the avatar of the post author.                       |
+| nickname    | text | Username of the post author.                                 |
+| user_id     | text | User ID of the post author. His/her profile is at https://weibo.com/u/user_id where `user_id` should be replaced with the value from this column. |
+| posted_time | text | The time when the post published. Its format can be either "seconds/hours/days ago" or an exact datetime with or without years. It also contains Chinese character which represents "month", "day", "second", "ago", ... |
+| source      | text | How the post author visit "weibo". It can be either the device name or the topic (tag) name. |
+| weibo_id    | text | The post can be accessed at https://weibo.com/user_id/weibo_id where `user_id` and `weibo_id` should be replaced with values from the columns. |
+| content     | text | The text of the post.                                        |
+| reposts     | text | Number of reposts. If the number exceeds 10 thousands, it will be ended with the Chinese character "万". The character "万" is a unit, which means 10 thousands. (The same will happen in "comments" and "likes".) |
+| comments    | text | Number of comments.                                          |
+| likes       | text | Number of likes.                                             |
+
