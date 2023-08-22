@@ -1,4 +1,4 @@
-# "weibo.com" Web Crawler
+# Web crawler weibo
 
  The toolbox to collect posts from https://weibo.com
 
