@@ -8,9 +8,28 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from requests import Session
 from tqdm import tqdm
+from argparse import ArgumentParser
 
 sess = Session()
 sess.trust_env = False
+parser = ArgumentParser()
+parser.add_argument('--db', type=str, default='./posts.db',
+                    help='The path of the database, where to store the cookies and fetched posts. If blank, data is '
+                         'saved at posts.db of this program\'s root directory.')
+parser.add_argument('--query', type=str,
+                    help='Search query submitted to https://weibo.com All posts containing this string will be '
+                         'recorded, 50 pages at most.')
+parser.add_argument('--start_time', type=str,
+                    help='Format code: https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format'
+                         '-codes\n'
+                         'Posts from this hour will be collected. The time zone is the same as https://weibo.com '
+                         'server. Date format is \'%Y-%m-%d-%H\'.')
+parser.add_argument('--end_time', type=str,
+                    help='Posts till this hour will be collected. The format is the same as \'start_time\'.')
+parser.add_argument('--max_page', type=int,
+                    help='The maximum page to collect. If existed pages are less than this number, the result will be '
+                         'fewer.')
+command, _ = parser.parse_known_args()
 
 
 def get_first_page(search_string, header, st, et, rest_time=(2, 5)):
@@ -161,3 +180,7 @@ def search(db, query, start_time, end_time, max_page=None):
             get_posts(db=db, table=table, header=chrome_113, web_text=response)
         pbar.update(1)
     pbar.close()
+
+
+if __name__ == '__main__':
+    search(**vars(command))

@@ -7,9 +7,19 @@ import sqlite3
 import base64
 from Crypto.Cipher import AES
 import ctypes
-import ctypes.wintypes
 import json
+from argparse import ArgumentParser
+from selenium import webdriver
+import psutil
 
+parser = ArgumentParser()
+parser.add_argument('--chrome_user_data', type=str,
+                    help='The \'User Data\' file under the installation path of Google Chrome. If blank, assume'
+                         'Google Chrome\'s installed at default directory.')
+parser.add_argument('--db', type=str, default='./posts.db',
+                    help='The path of the database, where to store the cookies and fetched posts. If blank, data is '
+                         'saved at posts.db of this program\'s root directory.')
+command, _ = parser.parse_known_args()
 
 def dpapi_decrypt(encrypted):
     class DataBlob(ctypes.Structure):
@@ -35,7 +45,7 @@ def chrome_utc_parser(chrome_utc):
 
 
 class WeiboClient:
-    def __init__(self, db, chrome_user_data=None):
+    def __init__(self, db, chrome_user_data):
         if chrome_user_data is None:
             username = os.environ.get('USERNAME')
             if username is None:
@@ -78,5 +88,23 @@ class WeiboClient:
 
 
 if __name__ == '__main__':
-    weibo_client = WeiboClient(chrome_user_data=None, db='posts.db')
+    # confirm Google Chrome is closed.
+    chrome_opened = True
+    while chrome_opened:
+        for process in psutil.process_iter(['pid', 'name']):
+            if process.info['name'] == 'chrome.exe':
+                _ = input('[Info] Google Chrome is already open. Please close Google Chrome and press "Enter" to '
+                          'continue.')
+                break
+        else:
+            chrome_opened = False
+
+    # guide users to get cookies.
+    chrome_option = webdriver.ChromeOptions()
+    chrome_option.add_argument('--disable-features=LockProfileCookieDatabase')
+    chrome = webdriver.Chrome(options=chrome_option)
+    chrome.get('file:///' + os.path.abspath('chrome_instruction.html'))
+    _ = input('[Info] Press "Enter" to continue.')
+    weibo_client = WeiboClient(**vars(command))
     weibo_client.login()
+    chrome.quit()
