@@ -68,12 +68,31 @@ The data structure of the search results:
 | ----------- | ---- | ------------------------------------------------------------ |
 | avatar      | text | Link to the avatar of the post author.                       |
 | nickname    | text | Username of the post author.                                 |
-| user_id     | text | User ID of the post author. Their profile is at https://weibo.com/u/user_id where `user_id` should be replaced with the value from this column. |
+| user_id     | text | User ID of the post author.                                  |
 | posted_time | text | The time when the post was published. Its format can be either seconds/hours/days ago (in Chinese) or an exact datetime with or without years. |
 | source      | text | How the post author visits "weibo". It can be either the device name or the topic (tag) name. |
-| weibo_id    | text | The post can be accessed at https://weibo.com/user_id/weibo_id where `user_id` and `weibo_id` should be replaced with values from the columns. |
+| weibo_id    | text |                                                              |
 | content     | text | The main body of the post. This column of fast reposts will be empty. |
-| reposts     | text | Number of reposts. If the number exceeds 10 thousand, it will be ended with the Chinese character "万". The character "万" is a unit, which means 10 thousand. Similar in `comments` and `likes`. |
+| reposts     | text | Number of reposts. Chinese character "万" may appear in this field, as well as `comments` and `likes`, which means "muptiply 10,000". |
 | comments    | text | Number of comments.                                          |
 | likes       | text | Number of likes.                                             |
 
+SQL statements:
+
+<table>
+<thead>
+<tr><th>Name</th><th>Table</th><th>Description</th></tr>
+</thead>
+<tbody>
+    <tr>
+        <td>User profile URL</td>
+        <td>search results</td>
+        <td><code>'https://weibo.com/u/' || user_id</code></td>
+    </tr>
+    <tr>
+        <td>Post URL</td>
+        <td>search results</td>
+        <td><code>'https://weibo.com/' || user_id || '/' || weibo_id</code></td>
+    </tr>
+</tbody>
+</table>
